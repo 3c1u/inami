@@ -141,16 +141,12 @@ export default function App(props: {}) {
                         }>
                             Reset
                         </Button>
-                        <Button variant="contained" onClick={
-                            () => interpreter.step()
-                        }>
-                            Step
-                        </Button>
                     </Box>
                     <Box>
                         <canvas ref={theCanvas} width={300} height={300} style={
                             {
-                                backgroundColor: "black"
+                                backgroundColor: "black",
+                                border: "1px solid #666"
                             }
                         } />
                     </Box>
