@@ -113,6 +113,7 @@ import susuko from '../img/susuko.png'
  * 0x06  Halt()
  * 0x07  Sleep(msecs: i32)
  * 0x08  StrDraw(x: i32, y: i32, ch: *const u8, color: u32)
+ * 0x09  PopScreen(dest: *mut u8)
  * 
  * i/o layout
  * ---------------------------------
@@ -834,6 +835,15 @@ export default class Interpreter {
                     this.m_ctx!.fillText(str, x, y + 24)
 
                     this.popFramebuffer()
+                }
+                break;
+            case 0x09: // PopScreen
+                {
+                    const addr = this.pop()
+                    console.debug(`PopScreen(\$0x${addr.toString(16).padStart(2, '0')})`)
+
+                    const buf = this.m_memory.slice(kSusukoFramebufferAddress, kSusukoFramebufferAddress - 1)
+                    this.m_memory.set(buf, addr)
                 }
                 break;
             default:
