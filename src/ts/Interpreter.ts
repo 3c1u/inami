@@ -822,9 +822,9 @@ export default class Interpreter {
     }
 
     skipUntilRParen() {
-        const ch = this.m_memory[this.m_registers[kSusukoRegisterIPW]++]
-
         while (this.m_memsize > this.m_registers[kSusukoRegisterIPW]) {
+            const ch = this.m_memory[this.m_registers[kSusukoRegisterIPW]++]
+
             if (ch <= 0x007F) {
                 continue
             } else if ((ch & 0xE0) === 0xC0) {
