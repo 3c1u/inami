@@ -113,9 +113,17 @@ import susuko from '../img/susuko.png'
  * 0x06  Halt()
  * 0x07  Sleep(msecs: i32)
  * 0x08  StrDraw(x: i32, y: i32, ch: *const u8, color: u32)
+ * 
  * i/o layout
  * ---------------------------------
- * TODO
+ * 0x00: cursor X          (in)
+ * 0x01: cursor Y          (in)
+ * 0x02: cursor click poll (out)
+ * 0x03: cursor click X    (in)
+ * 0x04: cursor click Y    (in)
+ * 
+ * 0x10: key code poll     (out)
+ * 0x11: key code          (in)
  */
 
 /*
@@ -128,6 +136,32 @@ import susuko from '../img/susuko.png'
  * ススススス すすすすすす スス すす
  * int  0x06
  * ススススス すすすすすすす スス すす
+ */
+
+ /*
+ * ;; スス子を表示するサンプル（カーソル追尾）
+ * li   %raw, 0x157e41
+ * ススス す ス スススス スススス スススす スすスす スすすす すすすス スすスス スススす
+ * in   0x00, %rbw
+ * ススススス す スススス すす
+ * in   0x01, %rcw
+ * ススススス すす スススス すすす
+ * push %raw
+ * ススススス す ス す
+ * int  0x05
+ * ススススス すすすすすす スス すす
+ * push %rcw
+ * ススススス すすす ス す
+ * push %rbw
+ * ススススス すす ス す
+ * int  0x03
+ * ススススス すすすす スス すす
+ * li   %raw, 0x100
+ * ススス す ス スススス スススス スススス スススス スススス スススす スススス スススス
+ * cmp  %raw, %raw
+ * スススス ススススス す す
+ * bz   %raw
+ * スススス す ス す
  */
 
 /* Hello world (CharDraw)
@@ -221,6 +255,18 @@ export default class Interpreter {
 
     private m_delay: number = 0
 
+    private m_cursorX: number = 0
+    private m_cursorY: number = 0
+
+    private m_cursorClickX: number = 0
+    private m_cursorClickY: number = 0
+    private m_cursorClickPoll: boolean = false
+    private m_cursorClickQueue: Array<number> = []
+
+    private m_keyCode: number = 0
+    private m_keyCodePoll: boolean = false
+    private m_keyCodeQueue: Array<number> = []
+
     public constructor(memsize: number) {
         this.m_memory = new Uint8Array(memsize)
         this.m_memsize = memsize
@@ -232,6 +278,20 @@ export default class Interpreter {
         if (canvas) {
             this.m_ctx = canvas.getContext('2d')
             this.pushFramebuffer()
+
+            canvas.onclick = (event) => {
+                this.m_cursorClickQueue.push(event.offsetX)
+                this.m_cursorClickQueue.push(event.offsetY)
+            }
+
+            canvas.onmousemove = (event) => {
+                this.m_cursorX = event.offsetX
+                this.m_cursorY = event.offsetY
+            }
+            
+            canvas.onkeydown = (event) => {
+                this.m_keyCodeQueue.push(event.keyCode)
+            }
         } else {
             this.m_ctx = null
         }
@@ -535,13 +595,51 @@ export default class Interpreter {
                                 this.interrupt(arg1[1])
                                 break;
                             default:
+                                const port = arg1[1] & 0xFF
+
                                 if (arg2[1] == 0x02) {
                                     // OUT
-                                } else if (arg2[1] == 0x02) {
-                                    // IN
+                                    const value = this.m_registers[arg3[1]]
+                                    
+                                    switch (port) {
+                                        case 0x02:
+                                            this.m_cursorClickPoll = value !== 0
+                                            break
+                                        case 0x10:
+                                            this.m_keyCodePoll = value !== 0
+                                            break
+                                        default:
+                                            break
+                                    }
+                                } else if (arg2[1] == 0x03) {
+                                    let value = 0
+
+                                    switch (port) {
+                                        case 0x00:
+                                            value = this.m_cursorX
+                                            break
+                                        case 0x01:
+                                            value = this.m_cursorY
+                                            break
+                                        case 0x03:
+                                            value = this.m_cursorClickX
+                                            break
+                                        case 0x04:
+                                            value = this.m_cursorClickY
+                                            break
+                                        case 0x11:
+                                            value = this.m_keyCode
+                                            break
+                                        default:
+                                            break
+                                    }
+
+                                    console.log("IN")
+
+                                    this.m_registers[arg3[1]] = value
                                 }
 
-                                throw "unimplemented"
+                                // throw "unimplemented"
                                 break;
                         }
                     }
@@ -549,6 +647,15 @@ export default class Interpreter {
                 default:
                     throw "illegal instruction"
             }
+        }
+
+        if (this.m_keyCodePoll && this.m_keyCodeQueue.length !== 0) {
+            this.m_keyCode = this.m_keyCodeQueue.pop()!
+        }
+
+        if (this.m_cursorClickPoll && this.m_cursorClickQueue.length !== 0) {
+            this.m_cursorClickY = this.m_keyCodeQueue.pop()!
+            this.m_cursorClickX = this.m_keyCodeQueue.pop()!
         }
 
         this.pushFramebuffer()
