@@ -112,7 +112,7 @@ import susuko from '../img/susuko.png'
  * 0x05  PushScreen(src: *const u8)
  * 0x06  Halt()
  * 0x07  Sleep(msecs: i32)
- * 
+ * 0x08  StrDraw(x: i32, y: i32, ch: *const u8, color: u32)
  * i/o layout
  * ---------------------------------
  * TODO
@@ -130,7 +130,7 @@ import susuko from '../img/susuko.png'
  * ススススス すすすすすすす スス すす
  */
 
-/* Hello world
+/* Hello world (CharDraw)
 _main:
 0x100      li %raw, _RODATA_str01
 0x100      xor %rcw, %rcw
@@ -154,6 +154,20 @@ _main@head:
 0x100      bz _main@head
 _main@end:
 0x100      int 0x06 ; HALT
+_RODATA_str01:
+0x100      .cstr "Hello, world!"
+*/
+
+/* Hello world (StrDraw)
+0x100      li   %raw, _RODATA_str01
+0x100      li   %rcw, 0xFFFFFFFF
+0x100      xor  %rbw, %rbw
+0x100      push %rcw
+0x100      push %rbw
+0x100      push %rbw
+0x100      push %raw
+0x100      int  0x09
+0x100      int  0x06
 _RODATA_str01:
 0x100      .cstr "Hello, world!"
 */
@@ -674,6 +688,41 @@ export default class Interpreter {
                     this.m_delay = msecs
                 }
                 break;
+            case 0x08: // CharDraw
+                {
+                    // TODO: use other method
+
+                    const x = this.pop()
+                    const y = this.pop()
+                    const strAddr = this.pop()
+                    const col = this.pop()
+
+                    const r = (col >> 24) & 0xff
+                    const g = (col >> 16) & 0xff
+                    const b = (col >> 8) & 0xff
+                    const a = col & 0xff
+
+                    console.debug(`CharDraw(${x}, ${y}, \$0x${strAddr.toString(16).padStart(2, '0')}, rgba(${r}, ${g}, ${b}, ${a / 255.0}))`)
+
+                    if (!this.m_ctx) {
+                        console.debug("screen not present; not implemented")
+                    }
+
+                    let i = 0;
+                    for (i = strAddr; this.m_memory[i] != 0; i++)
+                        ;
+
+                    const chars = this.m_memory.slice(strAddr, i)
+                    const decoder = new TextDecoder()
+                    const str = decoder.decode(chars).split('\n')[0]
+
+                    this.m_ctx!.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255.0})`
+                    this.m_ctx!.font = "24px sans-serif"
+                    this.m_ctx!.fillText(str, x, y + 24)
+
+                    this.popFramebuffer()
+                }
+                break;
             default:
                 console.debug('unknown interrupt')
         }
@@ -753,8 +802,13 @@ export default class Interpreter {
             const suKatakana = (ch === 0xE3) && (ch2 === 0x82) && (ch3 === 0xB9)
             // す
             const suHiragana = (ch === 0xE3) && (ch2 === 0x81) && (ch3 === 0x99)
+            // 「
+            const lParen = (ch === 0xE3) && (ch2 === 0x80) && (ch3 === 0x8C)
 
-            if (suHiragana || suKatakana) {
+            if (lParen) {
+                this.skipUntilRParen()
+                return undefined
+            } else if (suHiragana || suKatakana) {
                 return suKatakana
             } else {
                 return undefined
@@ -765,5 +819,31 @@ export default class Interpreter {
         }
 
         return undefined
+    }
+
+    skipUntilRParen() {
+        const ch = this.m_memory[this.m_registers[kSusukoRegisterIPW]++]
+
+        while (this.m_memsize > this.m_registers[kSusukoRegisterIPW]) {
+            if (ch <= 0x007F) {
+                continue
+            } else if ((ch & 0xE0) === 0xC0) {
+                // 7-bit
+                this.m_registers[kSusukoRegisterIPW]++
+            } else if ((ch & 0xF0) === 0xE0) {
+                // 11-bit
+                const ch2 = this.m_memory[this.m_registers[kSusukoRegisterIPW]++]
+                const ch3 = this.m_memory[this.m_registers[kSusukoRegisterIPW]++]
+    
+                // 」
+                const rParen = (ch === 0xE3) && (ch2 === 0x80) && (ch3 === 0x8D)
+    
+                if (rParen)
+                    return
+            } else if ((ch & 0xF8) === 0xF0) {
+                // 21-bit
+                this.m_registers[kSusukoRegisterIPW] += 3
+            }
+        }
     }
 }

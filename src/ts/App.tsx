@@ -40,10 +40,23 @@ const editorOptions = {
     fontSize: 14,
 }
 
-const kSusukoHelloWorld = "ススス す ス スススス スススス スススす スすスす スすすす すすすス スすスス スススす\n"
+const kSusukoSusukoShow = "ススス す ス スススス スススス スススす スすスす スすすす すすすス スすスス スススす\n"
 + "ススススス す ス す\n"
 + "ススススス すすすすすす スス すす\n"
 + "ススススス すすすすすすす スス すす"
+
+const kSusukoHelloWorld = "Hello, world!\n\
+ススス す ス スススススススススススススススススススススススすスススススススス\n\
+ススス すすす ススス すすすすすすすすすすすすすすすすすすすすすすすすすすすすすすすす\n\
+ス すすすす スス すす\n\
+ススススス すすす ス す\n\
+ススススス す ス す\n\
+ススススス すす ス す\n\
+ススススス すす ス す\n\
+ススススス すすすすすすすすす スス すす\n\
+ススススス すすすすすすす スス すす"
+
+const kSusukoConway = "TODO"
 
 const interpreter = new Interpreter(0x400000)
 
@@ -60,10 +73,10 @@ export default function App(props: {}) {
                 setEditor(kSusukoHelloWorld)
                 break
             case 2:
-                setEditor("Quine")
+                setEditor(kSusukoSusukoShow)
                 break
             case 3:
-                setEditor("Conway's Game of Life")
+                setEditor(kSusukoConway)
                 break
             default:
                 break
@@ -103,7 +116,7 @@ export default function App(props: {}) {
                                     <em>None</em>
                                 </MenuItem>
                                 <MenuItem value={1}>Hello, world!</MenuItem>
-                                <MenuItem value={2}>Quine</MenuItem>
+                                <MenuItem value={2}>Susuko</MenuItem>
                                 <MenuItem value={3}>Conway's Game of Life</MenuItem>
                             </Select>
                         </FormControl>
