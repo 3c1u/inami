@@ -615,6 +615,12 @@ export default class Interpreter {
                                     let value = 0
 
                                     switch (port) {
+                                        case 0x02:
+                                            value = this.m_cursorClickPoll ? 1 : 0
+                                            break
+                                        case 0x10:
+                                            value = this.m_keyCodePoll ? 1 : 0
+                                            break
                                         case 0x00:
                                             value = this.m_cursorX
                                             break

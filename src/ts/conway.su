@@ -1,0 +1,67 @@
+% entry 0x100
+/*
+static framebuffer: &mut [u32] = raw_slice! {
+    from: 0x100000,
+    to: 0x157e40,
+};
+
+fn get_cell_neighbor(x: i32, y: i32) -> i32 {
+    let mut value = 0i32;
+
+    for i in ((x - 1).max(0))..=((x + 1).min(299)) {
+        for j in ((y - 1).max(0))..=((y + 1).min(299)) {
+            if i == x || j == i {
+                continue;
+            }
+
+            value += if framebuffer[i + j * 300] != 0 {
+                1
+            } else {
+                0
+            };
+        }
+    }
+}
+
+fn main() {
+    // initialize
+    susuko::io_out(0x02, 0x01);
+
+    loop {
+        // cursor poll
+        if susuko::io_in(0x02) == 0x00 {
+            let cursor_x = susuko::io_in(0x03);
+            let cursor_y = susuko::io_in(0x04);
+            let dot = cursor_x + cursor_y * 300;
+
+            // set value
+            framebuffer[dot as usize + 2] = 0x00FF00FF;
+
+            susuko::io_out(0x02, 0x01);
+        }
+
+        let mut buf = raw_slice! {
+            from: 0x100000,
+            to: 0x157e40,
+        };
+
+        susuko::fast_memcpy(buf, framebuffer);
+
+        // validate cells
+        for i in 0..300 {
+            for j in 0..300 {
+                let neighbor = get_cell_neighbor(i, j);
+                let current = buf[i + j * 300] != 0;
+
+                if neighbor == 3 {
+                    buf[i + j * 300] = true;
+                } else if neighbor >= 4 || neighbor <= 1 {
+                    buf[i + j * 300] = false;
+                }
+            }
+        }
+
+        susuko::present_buffer(buf);
+    }
+}
+*/
