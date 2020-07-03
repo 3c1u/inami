@@ -873,10 +873,10 @@
     prop-types "^15.7.2"
     react-is "^16.8.0"
 
-"@monaco-editor/react@^3.3.0":
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/@monaco-editor/react/-/react-3.3.0.tgz#dbd585a71bf9ef8147d877b4b26ff3de4017bd4a"
-  integrity sha512-qvmUhgawBk2kwNOmXxIkiMGHsLm9vvVoQNY4So/sdrLVIo0DlFBzeal4wkMe1RV0uK47ziVG0LAXm2gV8ioGdA==
+"@monaco-editor/react@^3.4.1":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@monaco-editor/react/-/react-3.4.1.tgz#2a37dc29340657569048762ae6b7ebf82b46a152"
+  integrity sha512-72W+Lv2UVgv8oNTyJKurSSCYf9WIw0Kg9/ZZ4b7E8HPNMge7Fj0SLiCtaEbyaCq2zfy/sWzA5JWkDq5jIOJtsQ==
 
 "@mrmlnc/readdir-enhanced@^2.2.1":
   version "2.2.1"
