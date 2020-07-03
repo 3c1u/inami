@@ -9,7 +9,7 @@
   "devDependencies": {
     "parcel": "^1.12.4",
     "rimraf": "^3.0.2",
-    "typescript": "^3.9.3"
+    "typescript": "^3.9.6"
   },
   "scripts": {
     "serve": "parcel ./src/index.html",
